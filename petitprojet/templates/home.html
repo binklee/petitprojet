@@ -3,16 +3,43 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <meta charset="utf-8">
-    
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 	<title>Petit projet</title>
 	
-	 
+	<script>
+		$(document).ready(function() {
+			console.log("JS is ready!");
+			
+			$( "#twitterForm" ).submit(function( event ) {
+				alert( "Handler for .submit() called." );
+				//event.preventDefault();
+			});
+		});
+	
+		
+		var screenNameSubmited = function(){
+			$.ajax({
+			url: "/api/user_timeline",
+			  data: {
+				screen_name: "dbinay"
+			  },
+			  success: function( data ) {
+				$( "#twitterData" ).html( "<strong>" + data + "</strong>" );
+			  }
+			});
+		}
+		
+	</script>
+	
 </head>
 
 <body>
-	<form method="GET">
+	<form id="twitterForm" method="GET">
 		Twitter screen name: <input type="text" name="screen_name"><br>
 		<input type="submit" value="Submit">
 	</form>
+	
+	<p id="twitterData"></p>
 </body>
+
 </html>
