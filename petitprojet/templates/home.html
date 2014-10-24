@@ -11,23 +11,66 @@
 			console.log("JS is ready!");
 			
 			$( "#twitterForm" ).submit(function( event ) {
-				alert( "Handler for .submit() called." );
-				//event.preventDefault();
+				screenNameSubmited2($("#screen_name").val())
+				event.preventDefault();
 			});
 		});
-	
 		
-		var screenNameSubmited = function(){
+		var screenNameSubmited = function(user_name){
 			$.ajax({
-			url: "/api/user_timeline",
-			  data: {
-				screen_name: "dbinay"
-			  },
-			  success: function( data ) {
-				$( "#twitterData" ).html( "<strong>" + data + "</strong>" );
-			  }
+				url: "/api/user_timeline.json",
+				data: { screen_name: user_name },
+				type: "GET",
+				dataType: "json",
+				success: function( resp ) {
+					console.log(resp);
+					$("#twitterData").html( "<strong>" + resp + "</strong>" );
+					$.each(resp, function(key, value) {
+						console.log("aaa" + key + " : " + value);
+					});
+				}
 			});
-		}
+		};
+		
+		var screenNameSubmited2 = function(user_name){
+			var api_url = "/api/user_timeline.json?screen_name="+user_name;
+			console.log(api_url);
+			$.getJSON(api_url, function(json_data) {
+				//formatting the profile information
+				console.log(json_data[0].user.name);
+				console.log(json_data[0].user.screen_name);
+				console.log(json_data[0].user.description);
+				console.log(json_data[0].user.profile_image_url);
+				console.log(json_data[0].user.location);
+				
+				//$("profile_image").attr("src", json_data[0].user.profile_image_url);
+				$("#profile_image").html('<img src="' + json_data[0].user.profile_image_url + '" width="60" height="60"></img>');
+				$("#profile_name").html(json_data[0].user.name);
+				$("#profile_screen_name").html("@" + json_data[0].user.screen_name);
+				$("#profile_description").html(json_data[0].user.description);
+				$("#profile_location").html(json_data[0].user.location);
+				
+				//formatting the table for the tweets
+				var tbl_head = "";
+				var tbl_head_row = "";
+				var tbl_body = "";
+				var first_iteration = true;
+				$.each(json_data, function() {
+					var tbl_row = "";
+					$.each(this, function (key, value) {
+						if(first_iteration == true) {
+							tbl_head_row += "<td>" + key + "</td>";
+						}
+						tbl_row += "<td>" + value + "</td>";
+					})
+					tbl_body += "<tr>" + tbl_row + "</tr>";
+					first_iteration = false;
+				})
+				tbl_head = "<tr>" + tbl_head_row + "</tr>";
+				$("#target_table thead").html(tbl_head);
+				$("#target_table tbody").html(tbl_body);
+			})
+		};
 		
 	</script>
 	
@@ -35,11 +78,28 @@
 
 <body>
 	<form id="twitterForm" method="GET">
-		Twitter screen name: <input type="text" name="screen_name"><br>
+		Twitter screen name: <input type="text" id="screen_name" name="screen_name"><br>
 		<input type="submit" value="Submit">
 	</form>
 	
 	<p id="twitterData"></p>
+	<p> ---------- </p>
+	
+	<div id="profile">
+		<strong>
+			<class id="profile_image"></class><br/>
+			<class id="profile_name"></class><br/>
+			<class id="profile_screen_name"></class><br/>
+			<class id="profile_location"></class><br/>
+			<class id="profile_description"></class><br/>
+		</strong>
+		<table id="target_table">
+			<thead>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+	</div>
 </body>
 
 </html>

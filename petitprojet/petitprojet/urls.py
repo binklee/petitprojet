@@ -5,5 +5,5 @@ from django.conf.urls.defaults import patterns, include, url
 urlpatterns = patterns('',
     url(r'^$', 'petitprojetapp.views.home'),
     url(r'^index.html$', 'petitprojetapp.views.home'),
-    url(r'/api/user_timeline.json^$', 'petitprojetapp.views.home'),
+    url(r'^api/user_timeline.json$', 'petitprojetapp.views.api_user_timeline'),
 )

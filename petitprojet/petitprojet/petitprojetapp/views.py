@@ -20,7 +20,10 @@ def home(request):
 @require_GET
 def api_user_timeline(request):
     # only GET requests make it this far thanks to the decorator above
+    print "here"
     screen_name = request.GET['screen_name']
+    print "end"
     if screen_name is not None:
         resp, content = client.request('https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name='+screen_name, "GET")
+        print content
         return HttpResponse(content, content_type="application/json")
