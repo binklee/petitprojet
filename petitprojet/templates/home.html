@@ -4,6 +4,8 @@
 <head>
     <meta charset="utf-8">
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+	<script src="//tablesorter.com/__jquery.tablesorter.min.js"></script>
+	
 	<title>Petit projet</title>
 	
 	<script>
@@ -11,10 +13,22 @@
 			console.log("JS is ready!");
 			
 			$( "#twitterForm" ).submit(function( event ) {
-				screenNameSubmited2($("#screen_name").val())
+				var screen_name = $("#screen_name").val();
+				var sorting = $('input[name=sorting]:checked').val();
+				getTimeline(screen_name, sorting);
+				getScore(screen_name);
 				event.preventDefault();
 			});
 		});
+		
+		var getScore = function(user_name){
+			var api_url = "/api/user_score.json?screen_name=" + user_name;
+			console.log(api_url);
+			$.getJSON(api_url, function(json_data) {
+				//formatting the user score
+				$("#profile_score").html("Ranking score of " + json_data.score);
+			});
+		}
 		
 		var screenNameSubmited = function(user_name){
 			$.ajax({
@@ -32,23 +46,17 @@
 			});
 		};
 		
-		var screenNameSubmited2 = function(user_name){
-			var api_url = "/api/user_timeline.json?screen_name="+user_name;
+		var getTimeline = function(user_name, sorting){
+			var api_url = "/api/user_timeline.json?screen_name=" + user_name + "&sorting=" + sorting;
 			console.log(api_url);
 			$.getJSON(api_url, function(json_data) {
 				//formatting the profile information
-				console.log(json_data[0].user.name);
-				console.log(json_data[0].user.screen_name);
-				console.log(json_data[0].user.description);
-				console.log(json_data[0].user.profile_image_url);
-				console.log(json_data[0].user.location);
-				
-				//$("profile_image").attr("src", json_data[0].user.profile_image_url);
 				$("#profile_image").html('<img src="' + json_data[0].user.profile_image_url + '" width="60" height="60"></img>');
 				$("#profile_name").html(json_data[0].user.name);
 				$("#profile_screen_name").html("@" + json_data[0].user.screen_name);
-				$("#profile_description").html(json_data[0].user.description);
 				$("#profile_location").html(json_data[0].user.location);
+				$("#profile_followers_count").html("Followers : " + json_data[0].user.followers_count);
+				$("#profile_description").html(json_data[0].user.description);
 				
 				//formatting the table for the tweets
 				var tbl_head = "";
@@ -58,10 +66,12 @@
 				$.each(json_data, function() {
 					var tbl_row = "";
 					$.each(this, function (key, value) {
-						if(first_iteration == true) {
-							tbl_head_row += "<td>" + key + "</td>";
+						if(key == "created_at" || key == "text" || key == "retweet_count") {
+							if(first_iteration == true) {
+								tbl_head_row += "<th>" + key + "</th>";
+							}
+							tbl_row += "<td>" + value + "</td>";
 						}
-						tbl_row += "<td>" + value + "</td>";
 					})
 					tbl_body += "<tr>" + tbl_row + "</tr>";
 					first_iteration = false;
@@ -69,7 +79,8 @@
 				tbl_head = "<tr>" + tbl_head_row + "</tr>";
 				$("#target_table thead").html(tbl_head);
 				$("#target_table tbody").html(tbl_body);
-			})
+				$("#target_table").tablesorter();
+			});
 		};
 		
 	</script>
@@ -79,6 +90,7 @@
 <body>
 	<form id="twitterForm" method="GET">
 		Twitter screen name: <input type="text" id="screen_name" name="screen_name"><br>
+		Sorting option: <input type="radio" name="sorting" value="byDate" checked="checked">by Date <input type="radio" name="sorting" value="byRetweet">by Retweet<br/><br/>
 		<input type="submit" value="Submit">
 	</form>
 	
@@ -90,10 +102,12 @@
 			<class id="profile_image"></class><br/>
 			<class id="profile_name"></class><br/>
 			<class id="profile_screen_name"></class><br/>
+			<class id="profile_score"></class><br/>
 			<class id="profile_location"></class><br/>
+			<class id="profile_followers_count"></class><br/>
 			<class id="profile_description"></class><br/>
 		</strong>
-		<table id="target_table">
+		<table id="target_table" class="tablesorter">
 			<thead>
 			</thead>
 			<tbody>
