@@ -110,7 +110,8 @@ TEMPLATE_DIRS = (
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     "petitprojet/templates",
-    "C:/Users/Deniz/gitrep/petitprojet/templates",
+    os.path.join(PROJECT_DIR, '../templates'),
+    #"C:/Users/Deniz/gitrep/petitprojet/templates",
 )
 
 INSTALLED_APPS = (
@@ -157,6 +158,13 @@ APP_ONLY_AUTHENTICATION_URL = 'https://api.twitter.com/oauth2/token'
 REQUEST_TOKEN_URL = 'https://api.twitter.com/oauth/request_token'
 AUTHORIZE_URL = 'https://api.twitter.com/oauth/authorize'
 ACCESS_TOKEN_URL = 'Access token URL'
+
+# SCORING SYSTEM PARAMETERS
+CONTENT_SCORE_COUNT = 4
+CONTENT_SCORE_FACTOR = 10
+FOLLOWERS_SCORE_COUNT = 6
+FOLLOWERS_SCORE_FACTOR = 10
+
 
 POSITIVE_WORDS = [word.rstrip() for word in open(os.path.join(PROJECT_DIR, 'positive-words.txt')).readlines()]
 NEGATIVE_WORDS = [word.rstrip() for word in open(os.path.join(PROJECT_DIR, 'negative-words.txt')).readlines()]

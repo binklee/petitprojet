@@ -4,8 +4,7 @@
 <head>
     <meta charset="utf-8">
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-	<script src="//tablesorter.com/__jquery.tablesorter.min.js"></script>
-	
+
 	<title>Petit projet</title>
 	
 	<script>
@@ -13,15 +12,24 @@
 			console.log("JS is ready!");
 			
 			$( "#twitterForm" ).submit(function( event ) {
-				$("#profile_score").html("Reputation score : ...");
 				var screen_name = $("#screen_name").val();
 				var sorting = $('input[name=sorting]:checked').val();
-				getTimeline(screen_name, sorting);
+				var filtering = $('input[name=filtering]:checked').val();
+				
+				//reinitialize values
+				$("#profile_score").html("Reputation score : ...wait...");
+				$("#error_message").html("");
+				
+				//first api for timeline and profile info
+				getTimeline(screen_name, sorting, filtering);
+				
+				//second api for retrieving the score
 				getScore(screen_name);
 				event.preventDefault();
 			});
 		});
 		
+		// call the score api and set the score value in the HTML DOM
 		var getScore = function(user_name){
 			var api_url = "/api/user_score.json?screen_name=" + user_name;
 			console.log(api_url);
@@ -31,24 +39,9 @@
 			});
 		}
 		
-		var screenNameSubmited = function(user_name){
-			$.ajax({
-				url: "/api/user_timeline.json",
-				data: { screen_name: user_name },
-				type: "GET",
-				dataType: "json",
-				success: function( resp ) {
-					console.log(resp);
-					$("#twitterData").html( "<strong>" + resp + "</strong>" );
-					$.each(resp, function(key, value) {
-						console.log("aaa" + key + " : " + value);
-					});
-				}
-			});
-		};
-		
-		var getTimeline = function(user_name, sorting){
-			var api_url = "/api/user_timeline.json?screen_name=" + user_name + "&sorting=" + sorting;
+		// call the timeline api and set the profile and tweets infos
+		var getTimeline = function(user_name, sorting, filtering){
+			var api_url = "/api/user_timeline.json?screen_name=" + user_name + "&sorting=" + sorting + "&filtering=" + filtering;
 			console.log(api_url);
 			$.getJSON(api_url, function(json_data) {
 				//formatting the profile information
@@ -63,27 +56,63 @@
 				var tbl_head = "";
 				var tbl_head_row = "";
 				var tbl_body = "";
+				var has_media = false;
+				var has_no_tweet = false;
 				var first_iteration = true;
 				$.each(json_data, function() {
 					var tbl_row = "";
 					$.each(this, function (key, value) {
-						if(key == "created_at" || key == "text" || key == "retweet_count") {
+						if(key == "created_at" || key == "text" || key == "retweet_count" || key == "entities") {
 							if(first_iteration == true) {
-								tbl_head_row += "<th>" + key + "</th>";
+								switch(key) {
+									case "text": tbl_head_row += "<th>Tweet</th>"; break;
+									case "created_at": tbl_head_row += "<th>Date</th>"; break;
+									case "retweet_count": tbl_head_row += "<th>Retweet count</th>"; break;
+									case "entities": tbl_head_row += "<th class=media>Media</th>"; break;
+								}
 							}
-							tbl_row += "<td>" + value + "</td>";
+							
+							if(key == "text" && value == "") {
+								// we make sure the tweet contains a text, otherwise it is an empty timeline
+								has_no_tweet = true;
+							}
+							
+							if(key == "entities" && value.hasOwnProperty("media") && value.media[0].hasOwnProperty("media_url")) {
+								// we check if the tweet contains a media
+								tbl_row += "<td class=media> <img src=\"" + value.media[0].media_url + ":thumb\">";
+								has_media = true;
+							}
+							
+							if(key == "entities" && (! value.hasOwnProperty("media") || ! value.media[0].hasOwnProperty("media_url"))) {
+								// ... should the tweet has no media, we fill in it an empty cell
+								tbl_row += "<td class=media></td>";
+							}
+							
+							if(key != "entities") {
+								// we create a cell with the values matching the (selected above) keys
+								tbl_row += "<td>" + value + "</td>";
+							}
 						}
 					})
 					tbl_body += "<tr>" + tbl_row + "</tr>";
 					first_iteration = false;
 				})
-				tbl_head = "<tr>" + tbl_head_row + "</tr>";
-				$("#target_table thead").html(tbl_head);
-				$("#target_table tbody").html(tbl_body);
-				$("#target_table").tablesorter();
+				
+				if(has_no_tweet) {
+					console.log("has no tweet");
+					$("#target_table").hide();
+					$("#error_message").html("No recent tweets matching your criteria...");
+				} else {
+					tbl_head = "<tr>" + tbl_head_row + "</tr>";
+					$("#target_table thead").html(tbl_head);
+					$("#target_table tbody").html(tbl_body);
+					$("#target_table").show();
+					if(! has_media) {
+						$(".media").hide();
+					}
+				}
 			});
 		};
-		
 	</script>
 	
 </head>
@@ -91,7 +120,8 @@
 <body>
 	<form id="twitterForm" method="GET">
 		Twitter screen name: <input type="text" id="screen_name" name="screen_name"><br>
-		Sorting option: <input type="radio" name="sorting" value="byDate" checked="checked">by Date <input type="radio" name="sorting" value="byRetweet">by Retweet<br/><br/>
+		Sorting option: <input type="radio" name="sorting" value="byDate" checked="checked">by Date <input type="radio" name="sorting" value="byRetweet">by Retweet<br/>
+		Filtering option: <input type="checkbox" name="filtering" value="photos">only with Photos<br/><br/>
 		<input type="submit" value="Submit">
 	</form>
 	
@@ -108,7 +138,8 @@
 			<class id="profile_followers_count"></class><br/>
 			<class id="profile_description"></class><br/>
 		</strong>
-		<table id="target_table" class="tablesorter">
+		<class id="error_message"></class>
+		<table id="target_table">
 			<thead>
 			</thead>
 			<tbody>
