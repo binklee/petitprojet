@@ -1,4 +1,7 @@
 # Django settings for petitprojet project.
+import os
+
+PROJECT_DIR = os.path.dirname(__file__)
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -154,3 +157,6 @@ APP_ONLY_AUTHENTICATION_URL = 'https://api.twitter.com/oauth2/token'
 REQUEST_TOKEN_URL = 'https://api.twitter.com/oauth/request_token'
 AUTHORIZE_URL = 'https://api.twitter.com/oauth/authorize'
 ACCESS_TOKEN_URL = 'Access token URL'
+
+POSITIVE_WORDS = [word.rstrip() for word in open(os.path.join(PROJECT_DIR, 'positive-words.txt')).readlines()]
+NEGATIVE_WORDS = [word.rstrip() for word in open(os.path.join(PROJECT_DIR, 'negative-words.txt')).readlines()]

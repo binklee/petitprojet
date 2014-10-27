@@ -13,6 +13,7 @@
 			console.log("JS is ready!");
 			
 			$( "#twitterForm" ).submit(function( event ) {
+				$("#profile_score").html("Reputation score : ...");
 				var screen_name = $("#screen_name").val();
 				var sorting = $('input[name=sorting]:checked').val();
 				getTimeline(screen_name, sorting);
@@ -26,7 +27,7 @@
 			console.log(api_url);
 			$.getJSON(api_url, function(json_data) {
 				//formatting the user score
-				$("#profile_score").html("Ranking score of " + json_data.score);
+				$("#profile_score").html("Reputation score : " + json_data.score + " pts." );
 			});
 		}
 		
